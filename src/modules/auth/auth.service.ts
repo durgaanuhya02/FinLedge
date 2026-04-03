@@ -115,7 +115,7 @@ export async function login(input: z.infer<typeof loginSchema>) {
     data: { userId: user.id, token: hashToken(rawRefresh), expiresAt: refreshExpiresAt() },
   });
 
-  const { passwordHash: _, verifyToken: __, resetToken: ___, ...safeUser } = user;
+  const { passwordHash: _, verifyToken: __, resetToken: ___, verifyTokenExpiresAt: ____, resetTokenExpiresAt: _____, ...safeUser } = user;
   return { accessToken, refreshToken: rawRefresh, user: safeUser };
 }
 
