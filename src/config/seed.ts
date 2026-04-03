@@ -100,9 +100,9 @@ async function main() {
   const records = RECORD_PLAN.map((r, i) => ({
     userId: users[i % 3].id,
     amount: r.amount,
-    type: r.type,
-    category: r.category,
-    date: dateForMonth(r.monthsAgo, 5 + (i % 20)), // spread days 5–24
+    type: r.type as 'income' | 'expense',
+    category: r.category as import('@prisma/client').Category,
+    date: dateForMonth(r.monthsAgo, 5 + (i % 20)),
     notes: r.notes,
   }));
 

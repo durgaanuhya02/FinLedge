@@ -1,10 +1,8 @@
-# FinLedger
+FinLedger
 
 A production-quality finance record management and analytics REST API with Role-Based Access Control (RBAC), JWT authentication, Google OAuth, and email verification.
 
----
-
-## Project Overview
+Project Overview
 
 FinLedger is a backend-only API that lets organizations track financial records (income and expenses), enforce strict role-based access, and surface aggregated analytics through a dashboard. It demonstrates:
 
@@ -17,9 +15,8 @@ FinLedger is a backend-only API that lets organizations track financial records 
 - Consistent API response envelope across all endpoints
 - Full integration test coverage with Jest + Supertest
 
----
 
-## Tech Stack
+ Tech Stack
 
 | Technology | Reason |
 |---|---|
@@ -35,58 +32,57 @@ FinLedger is a backend-only API that lets organizations track financial records 
 | swagger-jsdoc + swagger-ui-express | Auto-generated OpenAPI docs from JSDoc comments |
 | Jest + Supertest | Integration tests that hit real HTTP routes against a live in-memory test DB |
 
----
 
-## Architecture Decisions
+Architecture Decisions
 
-**Layered structure** — routes → controllers → services → DB. Controllers only parse/validate input and delegate to services. Services own all business logic. This makes each layer independently testable and replaceable without touching the others.
+1.Layered structure — routes → controllers → services → DB. Controllers only parse/validate input and delegate to services. Services own all business logic. This makes each layer independently testable and replaceable without touching the others.
 
-**RBAC in middleware** — `authorize(...roles)` is a reusable middleware factory applied at the route level. Keeping access control out of service logic means permissions are visible at a glance in the route file, not buried in business logic. It also means a single misconfigured route is the only failure point, not scattered conditionals across services.
+RBAC in middleware — `authorize(...roles)` is a reusable middleware factory applied at the route level. Keeping access control out of service logic means permissions are visible at a glance in the route file, not buried in business logic. It also means a single misconfigured route is the only failure point, not scattered conditionals across services.
 
-**Refresh token rotation** — on every `/refresh` call, the old token is revoked and a new one is issued. Reusing a rotated token returns 401, which detects token theft. All refresh tokens are hashed with SHA-256 before storage.
+Refresh token rotation — on every `/refresh` call, the old token is revoked and a new one is issued. Reusing a rotated token returns 401, which detects token theft. All refresh tokens are hashed with SHA-256 before storage.
 
-**Soft deletes** — `is_deleted` flag on records, `status: inactive` on users. No data is ever hard-deleted. All queries filter `isDeleted: false` by default.
+Soft deletes — `is_deleted` flag on records, `status: inactive` on users. No data is ever hard-deleted. All queries filter `isDeleted: false` by default.
 
-**Email verification is non-blocking** — registration succeeds and returns tokens immediately. The verification email is sent fire-and-forget. This avoids failing registration if SMTP is misconfigured, while still encouraging verification.
+Email verification is non-blocking — registration succeeds and returns tokens immediately. The verification email is sent fire-and-forget. This avoids failing registration if SMTP is misconfigured, while still encouraging verification.
 
-**Google OAuth account linking** — if a user registers with email/password first, then signs in with Google using the same email, the Google ID is automatically linked to the existing account. No duplicate accounts.
+Google OAuth account linking — if a user registers with email/password first, then signs in with Google using the same email, the Google ID is automatically linked to the existing account. No duplicate accounts.
 
-**Consistent response envelope** — every response is `{ success, data, meta? }` or `{ success, error }`. Clients never need to guess the shape.
+Consistent response envelope — every response is `{ success, data, meta? }` or `{ success, error }`. Clients never need to guess the shape.
 
----
 
-## Setup Instructions
 
-### 1. Clone and install
+Setup Instructions
 
-```bash
+ 1. Clone and install
+
+bash
 git clone <repo-url>
 cd finledger
 npm install
-```
 
-### 2. Configure environment
 
-```bash
+ 2. Configure environment
+
+bash
 cp .env.example .env
-```
+
 
 Edit `.env` and fill in:
 - JWT secrets (use long random strings in production)
 - Google OAuth credentials (from [console.cloud.google.com](https://console.cloud.google.com))
 - Gmail SMTP credentials (use a Gmail App Password)
 
-### 3. Run migrations
+ 3. Run migrations
 
-```bash
+bash
 npx prisma migrate dev
-```
 
-### 4. Seed the database
 
-```bash
+4. Seed the database
+
+bash
 npx ts-node --transpile-only src/config/seed.ts
-```
+
 
 This creates 3 users and 50 financial records across 6 months.
 
@@ -96,26 +92,23 @@ This creates 3 users and 50 financial records across 6 months.
 | analyst@finledger.com | analyst | Test@1234 |
 | viewer@finledger.com | viewer | Test@1234 |
 
-### 5. Run the server
+ 5. Run the server
 
-```bash
+bash
 npm run dev
-```
+
 
 Server starts at `http://localhost:3000`
 Swagger docs at `http://localhost:3000/api/docs`
 
-### 6. Run tests
+ 6. Run tests
 
-```bash
+bash
 npm test
-```
 
----
 
-## API Reference
-
-### Auth — `/api/auth`
+API Reference
+ Auth — `/api/auth`
 
 | Method | Path | Auth | Role | Description |
 |---|---|---|---|---|
@@ -130,7 +123,7 @@ npm test
 | GET | /api/auth/google | No | — | Initiate Google OAuth (redirects to Google) |
 | GET | /api/auth/google/callback | No | — | Google OAuth callback, returns tokens |
 
-### Users — `/api/users`
+Users — `/api/users`
 
 | Method | Path | Auth | Role | Description |
 |---|---|---|---|---|
@@ -139,7 +132,7 @@ npm test
 | PATCH | /api/users/:id | Yes | admin | Update name, role, status |
 | DELETE | /api/users/:id | Yes | admin | Soft delete (set inactive) |
 
-### Financial Records — `/api/records`
+Financial Records — `/api/records`
 
 | Method | Path | Auth | Role | Description |
 |---|---|---|---|---|
@@ -149,7 +142,7 @@ npm test
 | PATCH | /api/records/:id | Yes | admin | Partial update |
 | DELETE | /api/records/:id | Yes | admin | Soft delete |
 
-### Dashboard — `/api/dashboard`
+ Dashboard — `/api/dashboard`
 
 | Method | Path | Auth | Role | Description |
 |---|---|---|---|---|
@@ -159,9 +152,9 @@ npm test
 | GET | /api/dashboard/recent | Yes | viewer, analyst, admin | 10 most recent records |
 | GET | /api/dashboard/top-categories | Yes | analyst, admin | Top 5 expense categories |
 
----
 
-## Role Permission Matrix
+
+Role Permission Matrix
 
 | Action | viewer | analyst | admin |
 |---|---|---|---|
@@ -173,9 +166,7 @@ npm test
 | Dashboard top-categories | ✗ | ✓ | ✓ |
 | Manage users (list, update, delete) | ✗ | ✗ | ✓ |
 
----
-
-## Assumptions Made
+ Assumptions Made
 
 - Role is set at registration time. In a real product, only admins would assign elevated roles — here it is open for demo convenience.
 - Email verification is encouraged but not enforced — users can access the API without verifying. Enforcement would be a one-line middleware addition.
@@ -185,9 +176,8 @@ npm test
 - Google OAuth users have no `passwordHash` — they cannot use the email/password login or password reset flow.
 - The `jti` (JWT ID) claim is added to every token to prevent hash collisions when multiple tokens are issued within the same second.
 
----
 
-## Known Limitations / Tradeoffs
+Known Limitations / Tradeoffs
 
 - **No connection pooling** — SQLite is single-writer; fine for development, not for concurrent production load.
 - **In-process dashboard aggregations** — `getSummary`, `getByCategory`, etc. load all records into memory. Should use Prisma `groupBy` and `aggregate` for scale.
@@ -196,12 +186,11 @@ npm test
 - **Google OAuth returns JSON** — in a real app the callback would redirect to a frontend URL with tokens in a secure cookie or query param. Here it returns JSON for API-first usage.
 - **ts-node uses `--transpile-only`** — skips type checking at runtime for speed. Run `npx tsc --noEmit` separately to type-check.
 
----
 
-## What I Would Add Next
+What I Would Add Next
 
-1. **PostgreSQL + connection pooling** (PgBouncer or Prisma Accelerate) for production readiness and concurrent writes
-2. **Redis-backed rate limiting and refresh token store** for horizontal scaling across multiple instances
-3. **Audit log table** — record every mutation (who changed what and when) for compliance and debugging
-4. **DB-level aggregations** — replace in-memory dashboard loops with Prisma `groupBy` and `aggregate` for performance at scale
-5. **Frontend redirect flow for OAuth** — redirect to a frontend URL with tokens in an `HttpOnly` cookie instead of returning JSON from the callback
+1. PostgreSQL + connection pooling (PgBouncer or Prisma Accelerate) for production readiness and concurrent writes
+2. Redis-backed rate limiting and refresh token store for horizontal scaling across multiple instances
+3. Audit log table — record every mutation (who changed what and when) for compliance and debugging
+4. DB-level aggregations — replace in-memory dashboard loops with Prisma `groupBy` and `aggregate` for performance at scale
+5. Frontend redirect flow for OAuth — redirect to a frontend URL with tokens in an `HttpOnly` cookie instead of returning JSON from the callback
