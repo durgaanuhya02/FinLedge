@@ -194,3 +194,5 @@ What I Would Add Next
 3. Audit log table — record every mutation (who changed what and when) for compliance and debugging
 4. DB-level aggregations — replace in-memory dashboard loops with Prisma `groupBy` and `aggregate` for performance at scale
 5. Frontend redirect flow for OAuth — redirect to a frontend URL with tokens in an `HttpOnly` cookie instead of returning JSON from the callback
+
+DEPLOYMENT LINK: https://finledge.onrender.com/api/docs/
